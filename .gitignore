@@ -1,0 +1,4 @@
+.env
+.venv 
+s3_data/datasets/
+__pycache__/

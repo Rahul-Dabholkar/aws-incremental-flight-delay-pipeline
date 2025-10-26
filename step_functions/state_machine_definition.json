@@ -1,0 +1,83 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "StartCrawler",
+  "States": {
+    "StartCrawler": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:glue:startCrawler",
+      "Parameters": {
+        "Name": "project1-airlines-daily-flights-data-crawler"
+      },
+      "Next": "GetCrawler"
+    },
+    "GetCrawler": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:glue:getCrawler",
+      "Parameters": {
+        "Name": "project1-airlines-daily-flights-data-crawler"
+      },
+      "Next": "Is_Running?"
+    },
+    "Is_Running?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.Crawler.State",
+          "StringEquals": "RUNNING",
+          "Next": "Wait"
+        }
+      ],
+      "Default": "Glue StartJobRun"
+    },
+    "Wait": {
+      "Type": "Wait",
+      "Seconds": 10,
+      "Next": "GetCrawler"
+    },
+    "Glue StartJobRun": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "project1-raw-flights-data-ingestion"
+      },
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.TaskFailed"
+          ],
+          "Next": "Failed Notification"
+        }
+      ],
+      "Next": "Choice"
+    },
+    "Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.JobRunState",
+          "StringEquals": "SUCCEEDED",
+          "Next": "Success Notification"
+        }
+      ],
+      "Default": "Failed Notification"
+    },
+    "Success Notification": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "Message": "Glue Job Execution Successful!",
+        "TopicArn": "arn:aws:sns:ap-south-1:360226252516:notification"
+      },
+      "End": true
+    },
+    "Failed Notification": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "arn:aws:sns:ap-south-1:360226252516:notification",
+        "Message": "Glue Job Execution Failed!"
+      },
+      "End": true
+    }
+  }
+}
