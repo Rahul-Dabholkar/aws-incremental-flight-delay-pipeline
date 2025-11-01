@@ -2,6 +2,8 @@
 
 This project implements an automated ETL pipeline for processing and analyzing flight delay data using various AWS services. The pipeline is designed to handle incremental data loads efficiently and provide insights through Redshift analytics. A Streamlit dashboard is also made to simulate incremental data load to S3 and analyse fight delays using Plotly.
 
+![diagram](https://github.com/Rahul-Dabholkar/aws-incremental-flight-delay-pipeline/blob/main/docs/architecture/high-level-overview.png)
+
 ## Project Structure
 
 ```
